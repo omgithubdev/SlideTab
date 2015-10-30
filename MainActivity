@@ -1,0 +1,123 @@
+package com.example.omi.slidetab;
+
+import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+
+import fragments.DailyHuntFragment;
+import fragments.TipstatFragment;
+import tab.SlidingTabLayout;
+
+public class MainActivity extends AppCompatActivity {
+    private Toolbar mToolbar;
+    private ViewPager mViewPager;
+    private SlidingTabLayout mTab;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        mToolbar = (Toolbar) findViewById(R.id.app_bar);
+        setSupportActionBar(mToolbar);
+        mViewPager = (ViewPager) findViewById(R.id.pager);
+        mViewPager.setAdapter(new MyPagerAdapter(getSupportFragmentManager()));
+        mTab = (SlidingTabLayout) findViewById(R.id.tabs);
+        mTab.setCustomTabView(R.layout.custom_tab_view,R.id.tabText);
+        mTab.setDistributeEvenly(true);
+        mTab.setBackgroundColor(getResources().getColor(R.color.primaryColor));
+        mTab.setSelectedIndicatorColors(getResources().getColor(R.color.colorAccent));
+      /*  mTab.setCustomTabColorizer(new SlidingTabLayout.TabColorizer() {
+            @Override
+            public int getIndicatorColor(int position) {
+                return getResources().getColor(R.color.colorAccent);
+            }
+        });*/
+
+        mTab.setViewPager(mViewPager);
+
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    class MyPagerAdapter extends FragmentPagerAdapter {
+        String[] tabs;
+
+        public MyPagerAdapter(FragmentManager fm) {
+            super(fm);
+            tabs = getResources().getStringArray(R.array.tabs);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Fragment fragment = null;
+            // MyFragment myFragment=MyFragment.getInstance(position);
+            if (position == 0) {
+                fragment = new DailyHuntFragment();
+            }
+            if (position == 1) {
+                fragment = new TipstatFragment();
+            }
+         if(position==2 || position==3 || position==4 || position==5){
+                fragment=new MyFragment();
+            }
+
+            return fragment;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+
+            return tabs[position];
+        }
+
+        @Override
+        public int getCount() {
+            return 6;
+        }
+    }
+
+ public static class MyFragment extends Fragment{
+     @Nullable
+     @Override
+     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+         View layout=inflater.inflate(R.layout.fragment_my,container,false);
+
+         return layout;
+     }
+ }
+
+
+
+}
