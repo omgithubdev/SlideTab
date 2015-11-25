@@ -1,0 +1,194 @@
+package com.foodinger.foodingermenu;
+
+import android.content.ClipData;
+import android.content.Context;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+
+import java.util.ArrayList;
+
+/**
+ * Created by OMI on 9/13/2015.
+ */
+public class VivzAdapter extends RecyclerView.Adapter<VivzAdapter.ViewHolder> {
+    private ArrayList<ItemBean> mMenuArrayList = new ArrayList<>();
+
+
+    private LayoutInflater mInflater;
+    static int total=0;
+    Context context;
+
+
+    public VivzAdapter(FragmentActivity context) {
+
+        mInflater = LayoutInflater.from(context);
+
+        this.context = context;
+
+    }
+
+/*
+    public void plus(int position,View view) {
+        ViewHolder holder = null;
+       ItemBean current= mMenuArrayList.get(position);
+        int price=current.getmPrice();
+        int value = Integer.parseInt(holder.mValue.getText().toString());
+        value++;
+        if(price!=0) {
+            holder.mValue.setText(""+value);
+        }
+    }*/
+
+    public void setItemArrayList(ArrayList<ItemBean> mMenuArrayList) {
+
+        this.mMenuArrayList = mMenuArrayList;
+
+        notifyItemRangeChanged(0, mMenuArrayList.size());
+
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        int viewType = 0;
+        ItemBean item = mMenuArrayList.get(position);
+        int price = item.getmPrice();
+        if (price == 0) {
+            viewType = 1;
+        }
+        return viewType;
+    }
+
+    @Override
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        try {
+            View view = null;
+            if (viewType == 0) {
+                view = mInflater.inflate(R.layout.custom_row, parent, false);
+            } else if (viewType == 1) {
+                view = mInflater.inflate(R.layout.custom_row1, parent, false);
+            }
+
+            ViewHolder viewHolder = new ViewHolder(view);
+
+            return viewHolder;
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    @Override
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        try {
+
+            final ItemBean currentData = mMenuArrayList.get(position);
+            holder.mTitle.setText(currentData.getmItemName());
+            final int price = currentData.getmPrice();
+
+            if (price != 0) {
+                if (Menu2Activity.HD == 0) {
+                    holder.linearLayout.setVisibility(View.GONE);
+                } else {
+                    holder.linearLayout.setVisibility(View.VISIBLE);
+                }
+            }
+
+            if (price != 0) {
+                holder.mPrice.setText("Rs." + price);
+                holder.mValue.setText("" + 0);
+                holder.mValue.setText("" + currentData.getQuantity());
+                holder.mMinus.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int value = Integer.parseInt(holder.mValue.getText().toString());
+                        if (value != 0) {
+                            value--;
+                            if (price != 0) {
+                                currentData.setQuantity(value);
+                                holder.mValue.setText("" + value);
+                                total-=price;
+                                Menu2Activity.total(total);
+                            }
+                        }
+                    }
+                });
+
+                holder.mPlus.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                       // int value = Integer.parseInt(holder.mValue.getText().toString());
+                        int value = currentData.getQuantity();
+                        value++;
+                        if (price != 0) {
+                            ArrayList<OrderBean> arrayList=new ArrayList<OrderBean>();
+                            currentData.setQuantity(value);
+                            OrderBean bean=new OrderBean();
+                            bean.setQuantity(currentData.getQuantity());
+                            bean.setPrice(price);
+                            bean.setItemName(currentData.getmItemName());
+                            arrayList.add(bean);
+                            holder.mValue.setText("" + value);
+                            total+=price;
+                            Menu2Activity.myOrder(arrayList);
+                            Menu2Activity.total(total);
+                        }
+                    }
+                });
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public int getItemCount() {
+        return mMenuArrayList.size();
+    }
+
+
+    class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+
+        private TextView mTitle;
+        private TextView mPrice;
+        private ImageView mMinus;
+        private ImageView mPlus;
+        private TextView mValue;
+        private RelativeLayout relativeLayout;
+        public LinearLayout linearLayout;
+
+
+        public ViewHolder(View itemView) {
+            super(itemView);
+
+            mTitle = (TextView) itemView.findViewById(R.id.atitle);
+            mPrice = (TextView) itemView.findViewById(R.id.price);
+            mMinus = (ImageView) itemView.findViewById(R.id.minus);
+            mPlus = (ImageView) itemView.findViewById(R.id.plus);
+            mValue = (TextView) itemView.findViewById(R.id.order);
+            relativeLayout = (RelativeLayout) itemView.findViewById(R.id.customView);
+            linearLayout = (LinearLayout) itemView.findViewById(R.id.customize);
+
+
+
+        }
+
+
+        @Override
+        public void onClick(View view) {
+
+        }
+    }
+
+
+}
