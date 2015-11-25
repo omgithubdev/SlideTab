@@ -1,0 +1,409 @@
+package com.foodinger.foodingermenu;
+
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.os.Bundle;
+import android.util.Log;
+import android.support.v4.app.FragmentActivity;
+import android.view.View;
+import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+import fragments.MenuFragment;
+import tabs.SlidingTabLayout;
+
+public class Menu2Activity extends FragmentActivity {
+
+    ViewPager viewPager = null;
+    String[] menu2 = new String[6];
+    ArrayList mainmenu = new ArrayList();
+    static ArrayList<ArrayList<ItemBean>> allItem = new ArrayList<ArrayList<ItemBean>>();
+    static ArrayList<ArrayList<OrderBean>> orderItem = new ArrayList<ArrayList<OrderBean>>();
+    ArrayList<ArrayList> allPrice = new ArrayList<ArrayList>();
+    Spinner spinner;
+    String[] spin = {"Home Delivery", "Dine In"};
+    private SlidingTabLayout mTabs;
+    private String[] mDetails = new String[6];
+    public static final String TAG = MenuActivity.class.getSimpleName();
+    private String choice = new String();
+    private Button cart;
+    //static LinearLayout mlinear;
+    static int HD = 1;
+    ProgressDialog progressDialog;
+    static TextView mTotal;
+    String min_order;
+    String discount;
+    ImageView search;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_menu2);
+
+
+            viewPager = (ViewPager) findViewById(R.id.pager1);
+            mTabs = (SlidingTabLayout) findViewById(R.id.tabs);
+            mTotal = (TextView) findViewById(R.id.total);
+            cart = (Button) findViewById(R.id.cart);
+            search = (ImageView) findViewById(R.id.search);
+
+
+            //   mlinear= (LinearLayout) findViewById(R.id.customize);
+
+
+            spinner = (Spinner) findViewById(R.id.spinner);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.spinner_item, spin);
+
+            //get JSON data
+            System.out.println("get menu called");
+            getMenu();
+            System.out.println("get menu finished");
+
+
+            //spinner
+            spinner.setAdapter(adapter);
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    int position = spinner.getSelectedItemPosition();
+                    choice = spin[position];
+                    progressDialog = new ProgressDialog(Menu2Activity.this);
+                    progressDialog.setMessage("Loading...");
+                    progressDialog.show();
+                    progressDialog.setCancelable(false);
+                    progressDialog.setCanceledOnTouchOutside(false);
+
+                    if (choice == "Home Delivery") {
+                        HD = 1;
+                        FragmentManager fragmentManager = getSupportFragmentManager();
+                        viewPager.setAdapter(new MyAdapter(fragmentManager));
+                        mTabs.setViewPager(viewPager);
+                        progressDialog.cancel();
+                    } else {
+                        HD = 0;
+                        FragmentManager fragmentManager = getSupportFragmentManager();
+                        viewPager.setAdapter(new MyAdapter(fragmentManager));
+                        mTabs.setViewPager(viewPager);
+                        progressDialog.cancel();
+                    }
+                    Toast.makeText(getApplicationContext(), "You have selected:" + choice, Toast.LENGTH_LONG).show();
+
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+
+            System.out.println("progress dialog cancelled");
+            progressDialog.cancel();
+
+
+            cart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    addcart();
+                }
+            });
+
+            search.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    search();
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void search() {
+        Intent intent = new Intent(Menu2Activity.this, SearchActivity.class);
+        Bundle b = new Bundle();
+        ArrayList<ArrayList<ItemBean>> all = new ArrayList<ArrayList<ItemBean>>();
+        ItemBean bean = new ItemBean();
+        all = bean.getAllItem();
+        b.putSerializable("AllItems", allItem);
+        b.putStringArrayList("heading", mainmenu);
+        b.putSerializable("Order",orderItem);
+        intent.putExtras(b);
+        startActivity(intent);
+    }
+
+
+    //Add to Cart button
+    private void addcart() {
+
+        System.out.println("addcart dialog");
+        final Dialog dialog = new Dialog(Menu2Activity.this);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.custom_dialog);
+        //  dialog.setTitle("Terms and conditions");
+        //  ImageView cancel= (ImageView) dialog.findViewById(R.id.cancel);
+        TextView min = (TextView) dialog.findViewById(R.id.minorder);
+        TextView disc = (TextView) dialog.findViewById(R.id.discount1);
+        ImageView cancel = (ImageView) dialog.findViewById(R.id.cancel);
+        Button myOrder = (Button) dialog.findViewById(R.id.myOrder);
+        //  cancel.setImageResource(R.drawable.abc_ic_clear_mtrl_alpha);
+        min.setText(" 1." + min_order);
+        System.out.println(discount);
+        disc.setText(" 2." + discount);
+        int sum = 0;
+        for (int i = 0; i < allItem.size(); i++) {
+            ArrayList<ItemBean> finalarray = new ArrayList<ItemBean>();
+            finalarray = allItem.get(i);
+
+            for (int a = 0; a < finalarray.size(); a++) {
+                ItemBean bean = finalarray.get(a);
+                int quan = bean.getQuantity();
+                sum += quan;
+            }
+        }
+        if (sum == 0) {
+            Toast.makeText(getApplicationContext(), "Please select an item", Toast.LENGTH_LONG).show();
+        } else {
+            dialog.show();
+        }
+
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
+        myOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 0; i < allItem.size(); i++) {
+                    ArrayList<ItemBean> finalarray = new ArrayList<ItemBean>();
+                    finalarray = allItem.get(i);
+
+                    for (int a = 0; a < finalarray.size(); a++) {
+                        ItemBean bean = finalarray.get(a);
+                        int quan = bean.getQuantity();
+                        ArrayList<OrderBean> order = new ArrayList<OrderBean>();
+                        if (quan > 0) {
+                            OrderBean orderBean = new OrderBean();
+                            String item = bean.getmItemName();
+                            orderBean.setItemName(item);
+                            int price = bean.getmPrice();
+                            orderBean.setPrice(price);
+                            orderBean.setQuantity(quan);
+                            order.add(orderBean);
+                            System.out.println("My order:" + item);
+                            System.out.println("My price:" + price);
+                            System.out.println("Quantity:" + quan);
+                        }
+                        orderItem.add(order);
+                    }
+                }
+            }
+        });
+    }
+
+    private void getMenu() {
+        try {
+            RequestQueue queue = Volley.newRequestQueue(this);
+            String url = "http://foodinger.in/android/menu.php?menuItems=6007";
+
+            //Progress Dialog
+
+            progressDialog = new ProgressDialog(Menu2Activity.this);
+            progressDialog.setMessage("Loading...");
+            progressDialog.show();
+            progressDialog.setCancelable(false);
+            progressDialog.setCanceledOnTouchOutside(false);
+
+
+            queue.add(new JsonArrayRequest(url,
+                    new Response.Listener<JSONArray>() {
+                        @Override
+                        public void onResponse(JSONArray response) {
+                            try {
+                                getCurrentDetails(response);
+                                FragmentManager fragmentManager = getSupportFragmentManager();
+                                viewPager.setAdapter(new MyAdapter(fragmentManager));
+                                mTabs.setViewPager(viewPager);
+                                System.out.println("view pager set");
+                            } catch (JSONException e) {
+                                // TODO Auto-generated catch block
+                                e.printStackTrace();
+                            }
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    error.printStackTrace();
+                }
+            }));
+
+            System.out.println("get menu return");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void getCurrentDetails(JSONArray response) throws JSONException {
+
+        try {
+            JSONObject menu = response.getJSONObject(0);
+
+            JSONArray heading = menu.getJSONArray("Heading");
+            for (int j = 0; j < heading.length(); j++) {
+                /// menu2[j] = heading.getString(j).replaceAll("_"," ");
+                mainmenu.add(heading.getString(j).replaceAll("_", " "));
+                Log.i(TAG, "FROM JSON:" + mainmenu.get(j));
+            }
+
+            JSONObject items = response.getJSONObject(1);
+
+            JSONArray myitems = items.getJSONArray("Items");
+
+            JSONObject price = response.getJSONObject(2);
+
+            JSONArray myprice = price.getJSONArray("price");
+
+            for (int z = 0; z < myitems.length(); z++) {
+                JSONArray mainItem = myitems.getJSONArray(z);
+                JSONArray mainPrice = myprice.getJSONArray(z);
+
+
+                ArrayList<ItemBean> menuItems = new ArrayList<ItemBean>();
+
+                for (int p = 0; p < mainItem.length(); p++) {
+                    ItemBean itemBean = new ItemBean();
+                    itemBean.setmItemName(mainItem.getString(p));
+                    itemBean.setmPrice(mainPrice.getInt(p));
+                    itemBean.setQuantity(0);
+                    menuItems.add(itemBean);
+                }
+                allItem.add(menuItems);
+                // allPrice.add(menuPrice);
+            }
+            ItemBean item = new ItemBean();
+            item.setAllItem(allItem);
+
+            JSONObject dialog = response.getJSONObject(3);
+
+            min_order = dialog.getString("min_order");
+            Log.i(TAG, "min_order:" + min_order);
+            discount = dialog.getString("discount");
+            Log.i(TAG, "discount:" + discount);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    //Total price
+    public static void total(int total) {
+
+        // System.out.println(mTotal.toString());
+        mTotal.setText("Total: " + total);
+    }
+
+    public static void myOrder(ArrayList<OrderBean> arrayList){
+        if(orderItem==null){
+            orderItem.add(arrayList);
+        }
+        else if(orderItem!=null){
+            for(int i=0;i<orderItem.size();i++){
+                ArrayList<OrderBean> arrayList1=new ArrayList<>();
+                arrayList1=orderItem.get(i);
+                for(int j=0;j<arrayList1.size();j++){
+                    OrderBean bean=arrayList1.get(j);
+                    String name1=bean.getItemName();
+                    OrderBean bean1=arrayList.get(j);
+                    String name2=bean1.getItemName();
+                    if(name1==name2){
+                        int quan=bean1.getQuantity();
+                        bean.setQuantity(quan);
+                    }
+                    else {
+                        orderItem.add(arrayList);
+                    }
+                }
+            }
+        }
+
+    }
+
+    //Set View Pager
+    class MyAdapter extends FragmentPagerAdapter {
+
+        public MyAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public android.support.v4.app.Fragment getItem(int position) {
+            try {
+                android.support.v4.app.Fragment fragment = null;
+
+                ArrayList<ItemBean> finalItem = new ArrayList<ItemBean>();
+
+                for (int q = 0; q < allItem.size(); q++) {
+                    if (position == q) {
+                        finalItem = allItem.get(q);
+
+                        return fragment = MenuFragment.getInstance(finalItem);
+                    }
+                }
+                return fragment;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return mainmenu.size();
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            try {
+                System.out.println("title:" + mainmenu.get(position));
+                //return menu2[position];
+                return (CharSequence) mainmenu.get(position);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+            // return getResources().getStringArray(R.array.tabs)[position];
+        }
+    }
+
+}
