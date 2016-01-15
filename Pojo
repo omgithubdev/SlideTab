@@ -1,0 +1,464 @@
+package com.aaapsy.foodinger;
+
+import com.google.gson.annotations.Expose;
+
+import java.util.ArrayList;
+
+/**
+ * Created by Apoorva on 12/29/2015.
+ */
+public class PojoRestPage {
+    @Expose
+    String RestID;
+    @Expose
+    String name;
+    @Expose
+    String address;
+    @Expose
+    String tag_line;
+    @Expose
+    int pureVeg;
+    @Expose
+    int BothvegNonVeg;
+    @Expose
+    String fixed_disc;
+    @Expose
+    String logo;
+    @Expose
+    String luxury_type;
+    @Expose
+    int rating;
+    @Expose
+    String opening_hours;
+    @Expose
+    String cover_pic;
+    @Expose
+    String email;
+    @Expose
+    String avg_bill_for_two;
+    @Expose
+    ArrayList<Dtype> dine_types = new ArrayList<>();
+    @Expose
+    ArrayList<Cuisine> food_types = new ArrayList<>();
+    @Expose
+    ArrayList<Photo> images = new ArrayList<>();
+    @Expose
+    ArrayList<Rating> ratings = new ArrayList<>();
+    @Expose
+    ArrayList<PhoneNo> phone_no_cust = new ArrayList<>();
+    @Expose
+    ArrayList<Add_on> add_on = new ArrayList<>();
+    @Expose
+    ArrayList<Special> specialities = new ArrayList<>();
+
+    public ArrayList<Add_on> getAdd_on() {
+        return add_on;
+    }
+
+    public void setAdd_on(ArrayList<Add_on> add_on) {
+        this.add_on = add_on;
+    }
+
+    public class Add_on {
+        @Expose
+        int Air_Conditioned;
+        @Expose
+        int Smoking_Area;
+        @Expose
+        int Games;
+        @Expose
+        int Free_Wifi;
+        @Expose
+        int separate_cabins;
+        @Expose
+        int serve_alcohol;
+        @Expose
+        int accepts_card;
+
+        public int getAir_Conditioned() {
+            return Air_Conditioned;
+        }
+
+        public void setAir_Conditioned(int air_Conditioned) {
+            Air_Conditioned = air_Conditioned;
+        }
+
+        public int getSmoking_Area() {
+            return Smoking_Area;
+        }
+
+        public void setSmoking_Area(int smoking_Area) {
+            Smoking_Area = smoking_Area;
+        }
+
+        public int getGames() {
+            return Games;
+        }
+
+        public void setGames(int games) {
+            Games = games;
+        }
+
+        public int getFree_Wifi() {
+            return Free_Wifi;
+        }
+
+        public void setFree_Wifi(int free_Wifi) {
+            Free_Wifi = free_Wifi;
+        }
+
+        public int getSeparate_cabins() {
+            return separate_cabins;
+        }
+
+        public void setSeparate_cabins(int separate_cabins) {
+            this.separate_cabins = separate_cabins;
+        }
+
+        public int getServe_alcohol() {
+            return serve_alcohol;
+        }
+
+        public void setServe_alcohol(int serve_alcohol) {
+            this.serve_alcohol = serve_alcohol;
+        }
+
+        public int getAccepts_card() {
+            return accepts_card;
+        }
+
+        public void setAccepts_card(int accepts_card) {
+            this.accepts_card = accepts_card;
+        }
+    }
+
+    public ArrayList<Cuisine> getFood_types() {
+        return food_types;
+    }
+
+    public void setFood_types(ArrayList<Cuisine> food_types) {
+        this.food_types = food_types;
+    }
+
+    public ArrayList<Special> getSpecialities() {
+        return specialities;
+    }
+
+    public void setSpecialities(ArrayList<Special> specialities) {
+        this.specialities = specialities;
+    }
+
+    public class Cuisine {
+        @Expose
+        String food_Type_Name;
+
+        @Expose
+        String food_Type_Image;
+
+        public String getFood_Type_Image() {
+            return food_Type_Image;
+        }
+
+        public void setFood_Type_Image(String food_Type_Image) {
+            this.food_Type_Image = food_Type_Image;
+        }
+
+        public String getFood_Type_Name() {
+            return food_Type_Name;
+        }
+
+        public void setFood_Type_Name(String food_Type_Name) {
+            this.food_Type_Name = food_Type_Name;
+        }
+    }
+
+    public class Special {
+        @Expose
+        String name1;
+        @Expose
+        String ingredients1;
+        @Expose
+        String image1;
+        @Expose
+        String name2;
+        @Expose
+        String ingredients2;
+        @Expose
+        String image2;
+
+        public String getName1() {
+            return name1;
+        }
+
+        public void setName1(String name1) {
+            this.name1 = name1;
+        }
+
+        public String getIngredients1() {
+            return ingredients1;
+        }
+
+        public void setIngredients1(String ingredients1) {
+            this.ingredients1 = ingredients1;
+        }
+
+        public String getImage1() {
+            return image1;
+        }
+
+        public void setImage1(String image1) {
+            this.image1 = image1;
+        }
+
+        public String getName2() {
+            return name2;
+        }
+
+        public void setName2(String name2) {
+            this.name2 = name2;
+        }
+
+        public String getIngredients2() {
+            return ingredients2;
+        }
+
+        public void setIngredients2(String ingredients2) {
+            this.ingredients2 = ingredients2;
+        }
+
+        public String getImage2() {
+            return image2;
+        }
+
+        public void setImage2(String image2) {
+            this.image2 = image2;
+        }
+    }
+
+    public ArrayList<Rating> getRatings() {
+        return ratings;
+    }
+
+    public void setRatings(ArrayList<Rating> ratings) {
+        this.ratings = ratings;
+    }
+
+    public String getRestID() {
+        return RestID;
+    }
+
+    public void setRestID(String restID) {
+        RestID = restID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getTag_line() {
+        return tag_line;
+    }
+
+    public void setTag_line(String tag_line) {
+        this.tag_line = tag_line;
+    }
+
+    public int getPureVeg() {
+        return pureVeg;
+    }
+
+    public void setPureVeg(int pureVeg) {
+        this.pureVeg = pureVeg;
+    }
+
+    public int getBothvegNonVeg() {
+        return BothvegNonVeg;
+    }
+
+    public void setBothvegNonVeg(int bothvegNonVeg) {
+        BothvegNonVeg = bothvegNonVeg;
+    }
+
+    public String getFixed_disc() {
+        return fixed_disc;
+    }
+
+    public void setFixed_disc(String fixed_disc) {
+        this.fixed_disc = fixed_disc;
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getLuxury_type() {
+        return luxury_type;
+    }
+
+    public void setLuxury_type(String luxury_type) {
+        this.luxury_type = luxury_type;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public String getOpening_hours() {
+        return opening_hours;
+    }
+
+    public void setOpening_hours(String opening_hours) {
+        this.opening_hours = opening_hours;
+    }
+
+    public String getCover_pic() {
+        return cover_pic;
+    }
+
+    public void setCover_pic(String cover_pic) {
+        this.cover_pic = cover_pic;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getAvg_bill_for_two() {
+        return avg_bill_for_two;
+    }
+
+    public void setAvg_bill_for_two(String avg_bill_for_two) {
+        this.avg_bill_for_two = avg_bill_for_two;
+    }
+
+    public ArrayList<Dtype> getDine_types() {
+        return dine_types;
+    }
+
+    public void setDine_types(ArrayList<Dtype> dine_types) {
+        this.dine_types = dine_types;
+    }
+
+    public ArrayList getPhone_no_cust() {
+        return phone_no_cust;
+    }
+
+    public void setPhone_no_cust(ArrayList phone_no_cust) {
+        this.phone_no_cust = phone_no_cust;
+    }
+
+
+    public ArrayList<Photo> getImages() {
+        return images;
+    }
+
+    public void setImages(ArrayList<Photo> images) {
+        this.images = images;
+    }
+
+    class Photo {
+        @Expose
+        String image_name;
+
+        public String getImage_name() {
+            return image_name;
+        }
+
+        public void setImage_name(String image_name) {
+            this.image_name = image_name;
+        }
+    }
+
+    public class Dtype {
+        @Expose
+        String dine_Type_Name;
+
+        public String getDine_Type_Name() {
+            return dine_Type_Name;
+        }
+
+        public void setDine_Type_Name(String dine_Type_Name) {
+            this.dine_Type_Name = dine_Type_Name;
+        }
+    }
+
+    class Rating {
+        @Expose
+        String name;
+        @Expose
+        String ratings;
+        @Expose
+        String reviews;
+        @Expose
+        String date;
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getRatings() {
+            return ratings;
+        }
+
+        public void setRatings(String ratings) {
+            this.ratings = ratings;
+        }
+
+        public String getReviews() {
+            return reviews;
+        }
+
+        public void setReviews(String reviews) {
+            this.reviews = reviews;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+    }
+
+    class PhoneNo {
+        @Expose
+        private String phone_no;
+
+        public String getPhone_no() {
+            return phone_no;
+        }
+
+        public void setPhone_no(String phone_no) {
+            this.phone_no = phone_no;
+        }
+    }
+}
