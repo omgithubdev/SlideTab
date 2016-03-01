@@ -1,0 +1,78 @@
+   System.out.println("List:" + pojoChats.toString() + "__Size:" + pojoChats.size());
+            historyList = new ArrayList();
+            msgSize = new ArrayList();
+            for (int i = 0; i < pojoChats.size(); i++) {
+                profileList = new ArrayList();
+                ChatBean bean = new ChatBean();
+                bean.setToNo(pojoChats.get(i).getTo());
+                if (inChatHistory == 1) {
+                    String name = getContact(pojoChats.get(i).getTo());
+                    System.out.println("con:" + name);
+                    if (name != null) {
+                        bean.setName(name);
+                    } else {
+                        bean.setName("default");
+                    }
+                }
+                ArrayList<PojoChat.ChatList> chats = pojoChats.get(i).getChat();
+                messages = new ArrayList();
+                for (int j = 0; j < chats.size(); j++) {
+                    MessageBean msg = new MessageBean();
+                    msg.setMessage(chats.get(j).getMessage());
+                    msg.setDate(chats.get(j).getMsg_date());
+                    msg.setTime(chats.get(j).getMsg_time());
+                    msg.setSender(chats.get(j).getSender());
+                    msg.setSent(1);
+                    messages.add(msg);
+                }
+                ArrayList mess = checkDb(bean.getToNo());
+//                Collections.reverse(messages);
+                if (mess != null) {
+                    messages.addAll(0, mess);
+                }
+                int size = messages.size();
+                msgSize.add(size);
+                bean.setMessage(messages);
+
+                ArrayList<PojoChat.MyProfile> profileInfo = pojoChats.get(i).getProfile();
+                ProfileBean profileBean=new ProfileBean();
+                myProfPic = profileInfo.get(0).getProfile_pic();
+                myProfName = profileInfo.get(0).getName();
+                myProfMail = profileInfo.get(0).getEmail();
+                myProfDob = profileInfo.get(0).getDob();
+                profileList.add(myProfPic);
+                profileList.add(myProfName);
+                profileList.add(myProfMail);
+                profileList.add(myProfDob);
+                System.out.println(profileInfo.size() + "_" + myProfName + "_" + myProfMail);
+                System.out.println("Pic:" + profileInfo.get(0).getProfile_pic() + "Name" + profileInfo.get(0).getName());
+
+                historyList.add(bean);
+            }
+            FileOutputStream profileStream = new
+                    FileOutputStream(new File(Environment.getExternalStorageDirectory() + "/Android/data/Food", "ProfileList"));
+            try {
+                ObjectOutputStream pL = new ObjectOutputStream(profileStream);
+                pL.writeObject(profileList);
+                pL.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            FileOutputStream outputStream =
+                    new FileOutputStream(
+                            new File(Environment.getExternalStorageDirectory() + "/Android/data/Food/", "ChatList" + MainActivity.phoneNo)
+                    );
+            try {
+                ObjectOutputStream os = new ObjectOutputStream(outputStream);
+                os.writeObject(historyList);
+                os.close();
+                System.out.println("Chat Updated:");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            chatHistoryAdapter.setItemArrayList(historyList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
