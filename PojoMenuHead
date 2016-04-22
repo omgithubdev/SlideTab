@@ -1,0 +1,142 @@
+package com.aaapsy.foodinger;
+
+import com.google.gson.annotations.Expose;
+
+import java.util.ArrayList;
+
+/**
+ * Created by amankumar on 22/04/16.
+ */
+public class PojoMenuHead {
+    @Expose
+    String name;
+    @Expose
+    String image;
+    @Expose
+    ArrayList<MenuHead> menu=new ArrayList<>();
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public ArrayList<MenuHead> getMenu() {
+        return menu;
+    }
+
+    public void setMenu(ArrayList<MenuHead> menu) {
+        this.menu = menu;
+    }
+
+    class MenuHead{
+        @Expose
+        String menu_name;
+        @Expose
+        int menu_id;
+        @Expose
+        ArrayList<Items> sub_menu=new ArrayList<>();
+
+        public String getMenu_name() {
+            return menu_name;
+        }
+
+        public void setMenu_name(String menu_name) {
+            this.menu_name = menu_name;
+        }
+
+        public int getMenu_id() {
+            return menu_id;
+        }
+
+        public void setMenu_id(int menu_id) {
+            this.menu_id = menu_id;
+        }
+
+        class Items{
+            @Expose
+            String sub_menu_name;
+            @Expose
+            ArrayList<Details> details=new ArrayList<>();
+
+            public String getSub_menu_name() {
+                return sub_menu_name;
+            }
+
+            public void setSub_menu_name(String sub_menu_name) {
+                this.sub_menu_name = sub_menu_name;
+            }
+
+            public ArrayList<Details> getDetails() {
+                return details;
+            }
+
+            public void setDetails(ArrayList<Details> details) {
+                this.details = details;
+            }
+
+            class Details{
+                @Expose
+                String description;
+                @Expose
+                float selling_price;
+                @Expose
+                float price;
+                @Expose
+                int availability;
+                @Expose
+                String image;
+
+                public String getDescription() {
+                    return description;
+                }
+
+                public void setDescription(String description) {
+                    this.description = description;
+                }
+
+                public float getSelling_price() {
+                    return selling_price;
+                }
+
+                public void setSelling_price(float selling_price) {
+                    this.selling_price = selling_price;
+                }
+
+                public float getPrice() {
+                    return price;
+                }
+
+                public void setPrice(float price) {
+                    this.price = price;
+                }
+
+                public int getAvailability() {
+                    return availability;
+                }
+
+                public void setAvailability(int availability) {
+                    this.availability = availability;
+                }
+
+                public String getImage() {
+                    return image;
+                }
+
+                public void setImage(String image) {
+                    this.image = image;
+                }
+            }
+        }
+    }
+}
