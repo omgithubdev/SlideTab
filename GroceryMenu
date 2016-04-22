@@ -1,0 +1,483 @@
+package com.aaapsy.foodinger;
+
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import retrofit.http.GET;
+
+public class GroceryMenu extends AppCompatActivity {
+    ViewPager viewPager;
+    SlidingTabLayout slidingTabLayout;
+    ArrayList test;
+    ArrayList<ArrayList<GroceryMenuBean>> allItems = new ArrayList<>();
+    CollapsingToolbarLayout mCollapse;
+    static TextView mTotal;
+    static TextView mCartNo;
+    static Context mContext;
+    LinearLayout mCheckout;
+    static SQLiteDatabase db;
+    int position;
+    public static String ENDPOINTHead = "http://192.168.0.8/foodinger/public/api/v1/grocery/";
+    public static String ENDPOINTMenu = "http://192.168.0.8/foodinger/public/api/v1/grocery-menu/";
+    ArrayList menuHaeading = new ArrayList();
+    ArrayList menuId = new ArrayList();
+    TextView mToolbarHead;
+    ProgressBar mLoadMenu;
+    ProgressDialog progressDialog;
+    ImageView mImageCategory;
+    ImageView mSearchButton;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_grocery_menu);
+            Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+            setSupportActionBar(toolbar);
+
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+            mContext = this;
+            mSearchButton = (ImageView) findViewById(R.id.searchIcon);
+            mLoadMenu = (ProgressBar) findViewById(R.id.loadGrocMenu);
+            mToolbarHead = (TextView) findViewById(R.id.toolbarHead);
+            mImageCategory = (ImageView) findViewById(R.id.imageCategory);
+            mCheckout = (LinearLayout) findViewById(R.id.checkoutButton);
+            mTotal = (TextView) findViewById(R.id.totalGroc);
+            mCartNo = (TextView) findViewById(R.id.cartNo);
+            mCollapse = (CollapsingToolbarLayout) findViewById(R.id.collapse);
+            slidingTabLayout = (SlidingTabLayout) findViewById(R.id.groceryHeading);
+            viewPager = (ViewPager) findViewById(R.id.groceryPager);
+
+            Bundle b = getIntent().getExtras();
+            position = b.getInt("position");
+            if (!GroceryCategory.map.containsKey(position)) {
+                getHeading();
+            } else {
+                menuHaeading = (ArrayList) GroceryCategory.headMap.get(position);
+                test = new ArrayList();
+                test = (ArrayList) GroceryCategory.map.get(position);
+                setPager();
+            }
+
+            CategoryBean bean = (CategoryBean) GroceryCategory.categoryList.get(position);
+            mToolbarHead.setText("" + bean.getName());
+
+            Picasso.with(getApplicationContext()).load("http://foodinger.in/images/" + bean.getImage())
+                    .placeholder(getApplicationContext().getResources().getDrawable(R.drawable.grocery))
+                    .error(getApplicationContext().getResources().getDrawable(R.drawable.grocery))
+                    .into(mImageCategory);
+
+            mCollapse.setScrimsShown(true);
+            mCollapse.setContentScrimColor(Color.parseColor("#4CAF50"));
+            mCheckout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (GroceryCategory.mCartItem.size() != 0) {
+                        if (GroceryCategory.total > 499) {
+                            Intent intent1 = new Intent(GroceryMenu.this, GroceryCart.class);
+                            startActivity(intent1);
+                        } else {
+                            final Dialog dialog = new Dialog(GroceryMenu.this);
+                            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                            dialog.setContentView(R.layout.custom_condition);
+                            dialog.show();
+                            Button confirmOrder = (Button) dialog.findViewById(R.id.confirmOrder);
+                            Button addMore = (Button) dialog.findViewById(R.id.moreOrder);
+                            addMore.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    dialog.dismiss();
+                                }
+                            });
+                            confirmOrder.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    dialog.dismiss();
+                                    Intent intent1 = new Intent(GroceryMenu.this, GroceryCart.class);
+                                    startActivity(intent1);
+                                }
+                            });
+                        }
+                    } else {
+                        Toast.makeText(mContext, "Please add an item to cart", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+
+            mSearchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    grocerySearch();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void grocerySearch() {
+        Intent intent = new Intent(GroceryMenu.this, GrocerySearchActivity.class);
+        Bundle b = new Bundle();
+        b.putStringArrayList("heading", menuHaeading);
+        b.putInt("position", position);
+        intent.putExtras(b);
+        startActivity(intent);
+    }
+
+
+    static void totalGroc() {
+        try {
+            if (GroceryCategory.total != 0) {
+                DecimalFormat f = new DecimalFormat("##.00");
+                mTotal.setText("" + f.format(GroceryCategory.total));
+            } else {
+                mTotal.setText("" + GroceryCategory.total);
+            }
+            mCartNo.setText("" + GroceryCategory.cartNo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(mContext.getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        try {
+            totalGroc();
+            setPager();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+    class MyAdapter extends FragmentPagerAdapter {
+
+        public MyAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            try {
+                Fragment fragment = null;
+                ArrayList finalItem = new ArrayList();
+                updateFragment();
+                System.out.println("Size gro:" + test.size() + "_" + position);
+                for (int q = 0; q < test.size(); q++) {
+                    if (position == q) {
+                        finalItem = (ArrayList) test.get(q);
+                        return fragment = GroceryMenuFragment.getInstance(finalItem);
+                    }
+                }
+                return fragment;
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+                return null;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return menuHaeading.size();
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            try {
+                return (CharSequence) menuHaeading.get(position);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+                return null;
+            }
+        }
+    }
+
+    private void updateFragment() {
+        try {
+            progressDialog = new ProgressDialog(GroceryMenu.this);
+            progressDialog.setMessage("Fetching items...");
+            progressDialog.show();
+            progressDialog.setCancelable(false);
+            progressDialog.setCanceledOnTouchOutside(false);
+
+            CategoryBean bean = (CategoryBean) GroceryCategory.categoryList.get(position);
+
+            ENDPOINTMenu = ENDPOINTHead + bean.getId();
+            RestAdapter adapter = new RestAdapter.Builder()
+                    .setEndpoint(ENDPOINTHead)
+                    .build();
+
+            ApiInterface api = adapter.create(ApiInterface.class);
+
+            api.getItemList(new Callback<PojoMenuHead>() {
+                @Override
+                public void success(PojoMenuHead pojoMenuHead, Response response) {
+                    progressDialog.cancel();
+                    System.out.println("Resp Menu:" + pojoMenuHead);
+                    updateHeading(pojoMenuHead);
+                    // updateDisplay1(pojoMenus);
+                    setPager();
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    progressDialog.cancel();
+                    Toast.makeText(getApplicationContext(), "Some error occurred.Please try again later", Toast.LENGTH_LONG).show();
+                    System.out.print("error hai yaha:" + error.toString());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public void getHeading() {
+        try {
+            progressDialog = new ProgressDialog(GroceryMenu.this);
+            progressDialog.setMessage("Fetching items...");
+            progressDialog.show();
+            progressDialog.setCancelable(false);
+            progressDialog.setCanceledOnTouchOutside(false);
+
+            CategoryBean bean = (CategoryBean) GroceryCategory.categoryList.get(position);
+
+            ENDPOINTHead = ENDPOINTHead + bean.getId();
+            RestAdapter adapter = new RestAdapter.Builder()
+                    .setEndpoint(ENDPOINTHead)
+                    .build();
+
+            ApiInterface api = adapter.create(ApiInterface.class);
+
+            api.getItemList(new Callback<PojoMenuHead>() {
+                @Override
+                public void success(PojoMenuHead pojoMenuHead, Response response) {
+                    progressDialog.cancel();
+                    System.out.println("Resp Menu:" + pojoMenuHead);
+                    updateHeading(pojoMenuHead);
+                    // updateDisplay1(pojoMenus);
+                    setPager();
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    progressDialog.cancel();
+                    Toast.makeText(getApplicationContext(), "Some error occurred.Please try again later", Toast.LENGTH_LONG).show();
+                    System.out.print("error hai yaha:" + error.toString());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public interface ApiInterface {
+        @GET("/")
+        public void getItemList(Callback<PojoMenuHead> response);
+    }
+
+    private void updateHeading(PojoMenuHead pojoMenus) {
+        System.out.println("Menu list:" + pojoMenus);
+        ArrayList<PojoMenuHead.MenuHead> menuHead = pojoMenus.getMenu();
+        System.out.println("menuHead:" + menuHead);
+        for (int i = 0; i < menuHead.size(); i++) {
+            menuHaeading.add(menuHead.get(i).getMenu_id());
+        }
+    }
+
+    private void setPager() {
+        try {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            System.out.println("View pager:" + viewPager);
+            viewPager.setAdapter(new MyAdapter(fragmentManager));
+            slidingTabLayout.setViewPager(viewPager);
+            viewPager.setOffscreenPageLimit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void updateDisplay1(List<PojoMenu> pojoMenus) {
+        try {
+            System.out.println("Size Pojo:" + pojoMenus.size());
+            ArrayList heading = pojoMenus.get(0).getHeading();
+            for (int i = 0; i < heading.size(); i++) {
+                menuHaeading.add(heading.get(i).toString().replace("_", " "));
+            }
+            GroceryCategory.headMap.put(position, menuHaeading);
+            if (!GroceryCategory.map.containsKey(position)) {
+                System.out.println("update:");
+                ArrayList<ArrayList<String>> items = pojoMenus.get(1).getItems();
+                ArrayList<ArrayList<String>> price = pojoMenus.get(5).getPrice();
+                ArrayList<ArrayList<String>> available = pojoMenus.get(4).getAvail();
+                ArrayList<ArrayList<String>> image = pojoMenus.get(3).getImage();
+                ArrayList<ArrayList<String>> volume = pojoMenus.get(2).getDes();
+                System.out.println("Check:" + pojoMenus.get(6).getSelling_Price().size());
+                ArrayList<ArrayList<String>> sellPrice = new ArrayList<>();
+                if (pojoMenus.get(6).getSelling_Price().size() != 0) {
+                    sellPrice = pojoMenus.get(6).getSelling_Price();
+                }
+
+                System.out.println("All size:" + items.size() + "_" + price.size() + "_" + image.size() + "_" + volume.size());
+                for (int j = 0; j < items.size(); j++) {
+                    ArrayList grocItems = new ArrayList();
+                    ArrayList item1 = items.get(j);
+                    ArrayList price1 = price.get(j);
+                    ArrayList image1 = image.get(j);
+                    ArrayList avail1 = available.get(j);
+                    ArrayList volume1 = volume.get(j);
+                    ArrayList sellPrice1 = new ArrayList();
+                    if (pojoMenus.get(6).getSelling_Price().size() != 0) {
+                        sellPrice1 = sellPrice.get(j);
+                    }
+                    for (int k = 0; k < item1.size(); k++) {
+                        if (grocItems.size() == 0) {
+                            GroceryMenuBean groceryMenuBean = new GroceryMenuBean();
+                            groceryMenuBean.setName(item1.get(k).toString());
+                            groceryMenuBean.setImage(image1.get(k).toString());
+                            groceryMenuBean.setOptions(0);
+                            ArrayList descMenu = new ArrayList();
+                            GroceryMenuDesc bean1 = new GroceryMenuDesc();
+                            bean1.setVolume(volume1.get(k).toString());
+                            bean1.setAvailable(Integer.parseInt(avail1.get(k).toString()));
+                            bean1.setPrice(Float.parseFloat(sellPrice1.get(k).toString()));
+                            bean1.setMrp(Integer.parseInt(price1.get(k).toString()));
+                            descMenu.add(bean1);
+                            groceryMenuBean.setDesc(descMenu);
+                            System.out.println("sell price:" + sellPrice1.get(k).toString());
+                            groceryMenuBean.setCategoryPos(position);
+                            groceryMenuBean.setHeadPos(j);
+                            groceryMenuBean.setItemPos(grocItems.size());
+                            grocItems.add(groceryMenuBean);
+                        } else {
+                            int flag = 0;
+                            for (int i = 0; i < grocItems.size(); i++) {
+                                GroceryMenuBean bean = (GroceryMenuBean) grocItems.get(i);
+                                System.out.println("Check equals:" + bean.getName().trim().replace(" ", "%") + "=" + item1.get(k).toString().trim().replace(" ", "%"));
+                                if (bean.getName().trim().replace(" ", "").equals(item1.get(k).toString().trim().replace(" ", ""))) {
+                                    bean.setOptions(1);
+                                    GroceryMenuDesc bean2 = new GroceryMenuDesc();
+                                    bean2.setAvailable(Integer.parseInt(avail1.get(k).toString()));
+                                    bean2.setVolume(volume1.get(k).toString());
+                                    bean2.setPrice(Float.parseFloat(sellPrice1.get(k).toString()));
+                                    bean2.setMrp(Integer.parseInt(price1.get(k).toString()));
+                                    bean2.setQuantity(0);
+                                    ArrayList descMenu1 = bean.getDesc();
+                                    descMenu1.add(bean2);
+                                    bean.setDesc(descMenu1);
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if (flag == 0) {
+                                GroceryMenuBean groceryMenuBean = new GroceryMenuBean();
+                                groceryMenuBean.setName(item1.get(k).toString());
+                                groceryMenuBean.setImage(image1.get(k).toString());
+                                groceryMenuBean.setOptions(0);
+                                ArrayList descMenu = new ArrayList();
+                                GroceryMenuDesc bean1 = new GroceryMenuDesc();
+                                bean1.setVolume(volume1.get(k).toString());
+                                bean1.setQuantity(0);
+                                bean1.setAvailable(Integer.parseInt(avail1.get(k).toString()));
+                                bean1.setPrice(Float.parseFloat(sellPrice1.get(k).toString()));
+                                bean1.setMrp(Integer.parseInt(price1.get(k).toString()));
+                                descMenu.add(bean1);
+                                groceryMenuBean.setDesc(descMenu);
+                                System.out.println("sell price:" + sellPrice1.get(k).toString());
+                                groceryMenuBean.setCategoryPos(position);
+                                groceryMenuBean.setHeadPos(j);
+                                System.out.println("name:" + item1.get(k).toString() + "=" + k);
+                                groceryMenuBean.setItemPos(grocItems.size());
+                                grocItems.add(groceryMenuBean);
+                            }
+                        }
+                    }
+                    allItems.add(grocItems);
+                }
+                GroceryCategory.map.put(position, allItems);
+            }
+            System.out.println("Size hai re:" + allItems.size());
+            test = new ArrayList();
+            test = (ArrayList) GroceryCategory.map.get(position);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_grocery_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == android.R.id.home) {
+            onBackPressed();
+        }
+        //noinspection SimplifiableIfStatement
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        try {
+            super.onBackPressed();
+            GroceryMenu.this.finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getApplicationContext(), "Some error occurred.Please try again..!!", Toast.LENGTH_LONG).show();
+        }
+    }
+}
